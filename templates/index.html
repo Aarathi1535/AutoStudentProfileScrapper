@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Lookup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Student Record Lookup</h1>
+        <form action="/student" method="post">
+            <input type="text" name="roll_number" placeholder="Enter Roll Number" required>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+</body>
+</html>
