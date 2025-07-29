@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Student Details</h1>
+        {% if student %}
+            <p><strong>Name:</strong> {{ student.name }}</p>
+            <p><strong>Department:</strong> {{ student.department }}</p>
+            <p><strong>Email:</strong> {{ student.email }}</p>
+            <p><strong>HackerRank:</strong> {{ student.hackerrank_username }}</p>
+
+            <form action="/hackerrank_badges" method="post">
+                <input type="hidden" name="username" value="{{ student.hackerrank_username }}">
+                <button type="submit">Get HackerRank Badges</button>
+            </form>
+        {% else %}
+            <p>No student found with that roll number.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
