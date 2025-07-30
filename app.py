@@ -42,7 +42,7 @@ def fetch_hackerrank_badges_svg(username):
         if response.status_code == 200:
             print("📥 Successfully fetched badge SVG.")
             svg_xml = response.text
-            soup = BeautifulSoup(svg_xml, 'xml')
+            soup = BeautifulSoup(svg_xml, 'html.parser')
             
             # Debug info
             
