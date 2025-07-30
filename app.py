@@ -28,7 +28,12 @@ def fetch_hackerrank_badges_svg(username):
 
     try:
         badge_url = f'https://hackerrank-badges.vercel.app/{username}'
-        response = requests.get(badge_url, timeout=15)
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+
+        response = requests.get(badge_url, headers=headers, timeout=15)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'xml')
@@ -63,8 +68,10 @@ def fetch_hackerrank_badges_svg(username):
             return unique_badges if unique_badges else None
         else:
             return None
-    except:
+    except Exception as e:
+        print("Error in fetch_hackerrank_badges_svg:", e)
         return None
+
 
 
 # ----------------------
