@@ -2,25 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Details</title>
+    <title>Student Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Student Details</h1>
-        {% if student %}
-            <p><strong>Name:</strong> {{ student.name }}</p>
-            <p><strong>Department:</strong> {{ student.department }}</p>
-            <p><strong>Email:</strong> {{ student.email }}</p>
-            <p><strong>HackerRank:</strong> {{ student.hackerrank_username }}</p>
+        <h1>📊 Student Performance Dashboard</h1>
 
-            <form action="/hackerrank_badges" method="post">
-                <input type="hidden" name="username" value="{{ student.hackerrank_username }}">
-                <button type="submit">Get HackerRank Badges</button>
-            </form>
+        {% if data %}
+        <!-- Student Metrics -->
+        <div class="metrics">
+            <div class="metric"><strong>🎓 CGPA:</strong> {{ data['CGPA'] }}</div>
+            <div class="metric"><strong>📚 Backlogs:</strong> {{ data['Total Backlogs'] }}</div>
+            <div class="metric"><strong>📋 Roll Number:</strong> {{ data['Roll Number'] }}</div>
+        </div>
+
+        <!-- Section: LeetCode -->
+        <h2>🧠 LeetCode Stats</h2>
+        {% if 'leetcode_stats' in data %}
+            <ul>
+                <li>✅ Total Solved: {{ data.leetcode_stats.totalSolved }}</li>
+                <li>⭐ Easy: {{ data.leetcode_stats.easySolved }}</li>
+                <li>🟠 Medium: {{ data.leetcode_stats.mediumSolved }}</li>
+                <li>🔴 Hard: {{ data.leetcode_stats.hardSolved }}</li>
+                {% if data.leetcode_stats.acceptanceRate %}
+                    <li>📈 Acceptance Rate: {{ data.leetcode_stats.acceptanceRate }}%</li>
+                {% endif %}
+                {% if data.leetcode_stats.ranking %}
+                    <li>🏆 Ranking: {{ data.leetcode_stats.ranking }}</li>
+                {% endif %}
+            </ul>
         {% else %}
-            <p>No student found with that roll number.</p>
+            <p>No valid LeetCode profile found.</p>
         {% endif %}
+
+        <!-- Section: HackerRank -->
+        <h2>🎖️ HackerRank Stats</h2>
+        {% if data.hackerrank_badges %}
+            <img src="https://hackerrank-badges.vercel.app/{{ data.hackerrank_username }}" 
+                 alt="HackerRank Badges" style="width:100%;max-width:400px;" />
+            <h3>🏅 Badge Summary</h3>
+            <ul>
+                {% for badge in data.hackerrank_badges %}
+                    <li>{{ badge['Badge Name'] }} - {{ badge['Stars'] }}⭐</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No valid HackerRank badge data found.</p>
+        {% endif %}
+
+        <!-- Summary -->
+        <h2>📊 Performance Summary</h2>
+        <ul>
+            <li><strong>CGPA Status:</strong> 
+                {% if data['CGPA'] >= 9.0 %}
+                    Excellent
+                {% elif data['CGPA'] >= 8.0 %}
+                    Good
+                {% elif data['CGPA'] >= 7.0 %}
+                    Average
+                {% else %}
+                    Below Average
+                {% endif %}
+            </li>
+            <li><strong>Backlog Status:</strong> 
+                {% if data['Total Backlogs'] == 0 %}
+                    No Backlogs
+                {% else %}
+                    {{ data['Total Backlogs'] }} Backlog(s)
+                {% endif %}
+            </li>
+            <li><strong>HackerRank Profile:</strong> 
+                {% if data['Hackerrank profile link'] %}
+                    ✅ Available
+                {% else %}
+                    ❌ Not Available
+                {% endif %}
+            </li>
+            <li><strong>LeetCode Profile:</strong> 
+                {% if data['Leet code links'] %}
+                    ✅ Available
+                {% else %}
+                    ❌ Not Available
+                {% endif %}
+            </li>
+        </ul>
+        {% else %}
+        <p>❌ Roll number not found.</p>
+        {% endif %}
+
+        <a href="/" class="back-link">← Back to Search</a>
     </div>
 </body>
 </html>
