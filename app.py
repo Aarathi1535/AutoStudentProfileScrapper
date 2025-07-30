@@ -16,6 +16,8 @@ data_df.columns = data_df.columns.str.strip()
 # HackerRank Badges Logic
 # ----------------------
 def fetch_hackerrank_badges_svg(username):
+    print(f"🔍 Fetching badges for username: {username}")
+
     """
     Fetch HackerRank badges by parsing SVG structure directly
     Returns list of dictionaries with badge names and star counts
@@ -38,6 +40,7 @@ def fetch_hackerrank_badges_svg(username):
 
 
         if response.status_code == 200:
+            print("📥 Successfully fetched badge SVG.")
             svg_xml = response.text
             soup = BeautifulSoup(svg_xml, 'xml')
             
