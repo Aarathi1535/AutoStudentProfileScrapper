@@ -11,82 +11,98 @@
 
         {% if data %}
         <!-- Student Metrics -->
-        <div class="metrics">
-            <div class="metric"><strong>🎓 CGPA:</strong> {{ data['CGPA'] }}</div>
-            <div class="metric"><strong>📚 Backlogs:</strong> {{ data['Total Backlogs'] }}</div>
-            <div class="metric"><strong>📋 Roll Number:</strong> {{ data['Roll Number'] }}</div>
-        </div>
+        <table class="details-table">
+            <tr><th>🎓 CGPA</th><td>{{ data['CGPA'] }}</td></tr>
+            <tr><th>📚 Backlogs</th><td>{{ data['Total Backlogs'] }}</td></tr>
+            <tr><th>📋 Roll Number</th><td>{{ data['Roll Number'] }}</td></tr>
+        </table>
 
-        <!-- Section: LeetCode -->
+        <!-- LeetCode Stats -->
         <h2>🧠 LeetCode Stats</h2>
         {% if 'leetcode_stats' in data %}
-            <ul>
-                <li>✅ Total Solved: {{ data.leetcode_stats.totalSolved }}</li>
-                <li>⭐ Easy: {{ data.leetcode_stats.easySolved }}</li>
-                <li>🟠 Medium: {{ data.leetcode_stats.mediumSolved }}</li>
-                <li>🔴 Hard: {{ data.leetcode_stats.hardSolved }}</li>
-                {% if data.leetcode_stats.acceptanceRate %}
-                    <li>📈 Acceptance Rate: {{ data.leetcode_stats.acceptanceRate }}%</li>
-                {% endif %}
-                {% if data.leetcode_stats.ranking %}
-                    <li>🏆 Ranking: {{ data.leetcode_stats.ranking }}</li>
-                {% endif %}
-            </ul>
+        <table class="badge-table">
+            <tr><th>Total Solved</th><td>{{ data.leetcode_stats.totalSolved }}</td></tr>
+            <tr><th>⭐ Easy</th><td>{{ data.leetcode_stats.easySolved }}</td></tr>
+            <tr><th>🟠 Medium</th><td>{{ data.leetcode_stats.mediumSolved }}</td></tr>
+            <tr><th>🔴 Hard</th><td>{{ data.leetcode_stats.hardSolved }}</td></tr>
+            {% if data.leetcode_stats.acceptanceRate %}
+                <tr><th>📈 Acceptance Rate</th><td>{{ data.leetcode_stats.acceptanceRate }}%</td></tr>
+            {% endif %}
+            {% if data.leetcode_stats.ranking %}
+                <tr><th>🏆 Ranking</th><td>{{ data.leetcode_stats.ranking }}</td></tr>
+            {% endif %}
+        </table>
         {% else %}
             <p>No valid LeetCode profile found.</p>
         {% endif %}
 
-        <!-- Section: HackerRank -->
+        <!-- HackerRank Stats -->
         <h2>🎖️ HackerRank Stats</h2>
         {% if data.hackerrank_badges %}
             <img src="https://hackerrank-badges.vercel.app/{{ data.hackerrank_username }}" 
                  alt="HackerRank Badges" style="width:100%;max-width:400px;" />
             <h3>🏅 Badge Summary</h3>
-            <ul>
+            <table class="badge-table">
+                <tr><th>Badge Name</th><th>Stars</th></tr>
                 {% for badge in data.hackerrank_badges %}
-                    <li>{{ badge['Badge Name'] }} - {{ badge['Stars'] }}⭐</li>
+                    <tr>
+                        <td>{{ badge['Badge Name'] }}</td>
+                        <td>{{ badge['Stars'] }}⭐</td>
+                    </tr>
                 {% endfor %}
-            </ul>
+            </table>
         {% else %}
             <p>No valid HackerRank badge data found.</p>
         {% endif %}
 
         <!-- Summary -->
         <h2>📊 Performance Summary</h2>
-        <ul>
-            <li><strong>CGPA Status:</strong> 
-                {% if data['CGPA'] >= 9.0 %}
-                    Excellent
-                {% elif data['CGPA'] >= 8.0 %}
-                    Good
-                {% elif data['CGPA'] >= 7.0 %}
-                    Average
-                {% else %}
-                    Below Average
-                {% endif %}
-            </li>
-            <li><strong>Backlog Status:</strong> 
-                {% if data['Total Backlogs'] == 0 %}
-                    No Backlogs
-                {% else %}
-                    {{ data['Total Backlogs'] }} Backlog(s)
-                {% endif %}
-            </li>
-            <li><strong>HackerRank Profile:</strong> 
-                {% if data['Hackerrank profile link'] %}
-                    ✅ Available
-                {% else %}
-                    ❌ Not Available
-                {% endif %}
-            </li>
-            <li><strong>LeetCode Profile:</strong> 
-                {% if data['Leet code links'] %}
-                    ✅ Available
-                {% else %}
-                    ❌ Not Available
-                {% endif %}
-            </li>
-        </ul>
+        <table class="details-table">
+            <tr>
+                <th>CGPA Status</th>
+                <td>
+                    {% if data['CGPA'] >= 9.0 %}
+                        Excellent
+                    {% elif data['CGPA'] >= 8.0 %}
+                        Good
+                    {% elif data['CGPA'] >= 7.0 %}
+                        Average
+                    {% else %}
+                        Below Average
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Backlog Status</th>
+                <td>
+                    {% if data['Total Backlogs'] == 0 %}
+                        No Backlogs
+                    {% else %}
+                        {{ data['Total Backlogs'] }} Backlog(s)
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>HackerRank Profile</th>
+                <td>
+                    {% if data['Hackerrank profile link'] %}
+                        ✅ Available
+                    {% else %}
+                        ❌ Not Available
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>LeetCode Profile</th>
+                <td>
+                    {% if data['Leet code links'] %}
+                        ✅ Available
+                    {% else %}
+                        ❌ Not Available
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
         {% else %}
         <p>❌ Roll number not found.</p>
         {% endif %}
