@@ -16,6 +16,11 @@ data_df.columns = data_df.columns.str.strip()
 # HackerRank Badges Logic
 # ----------------------
 def fetch_hackerrank_badges_svg(username):
+    """
+    Fetch HackerRank badges by parsing SVG structure directly
+    Returns list of dictionaries with badge names and star counts
+    """
+    # Predefined list of valid HackerRank badges
     VALID_HACKERRANK_BADGES = {
         'Problem Solving', 'Java', 'Python', 'C Language', 'Cpp', 'C#', 'JavaScript',
         'Sql', '30 Days of Code', '10 Days of JavaScript', '10 Days of Statistics',
@@ -28,49 +33,175 @@ def fetch_hackerrank_badges_svg(username):
 
     try:
         badge_url = f'https://hackerrank-badges.vercel.app/{username}'
-
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-        }
-
-        response = requests.get(badge_url, headers=headers, timeout=15)
+        response = requests.get(badge_url, timeout=15)
 
         if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'xml')
+            svg_xml = response.text
+            soup = BeautifulSoup(svg_xml, 'xml')
+            
+            # Debug info
+            
+            # Look for badge information in the SVG
             text_elements = soup.find_all('text')
+            
+            # Look for star sections - this is the key structure
             star_sections = soup.find_all('g', class_='star-section')
-
-            badge_keywords = ['java', 'python', 'sql', 'javascript', 'cpp', 'problem solving',
-                              'algorithms', 'data structures', '30 days', '10 days', 'ruby',
-                              'swift', 'golang', 'rust', 'kotlin', 'scala', 'c', 'shell',
-                              'functional programming', 'object oriented programming']
-
-            all_texts = [t.get_text().strip() for t in text_elements if len(t.get_text().strip()) > 1]
+            
+            # Look for individual badge stars
+            badge_stars = soup.find_all('svg', class_='badge-star')
+            
+            # Display all text content to understand the structure
+            all_texts = []
+            for text in text_elements:
+                text_content = text.get_text().strip()
+                if text_content and len(text_content) > 1:
+                    all_texts.append(text_content)
+            
+            
+            
+            # Analyze star sections
+            for i, star_section in enumerate(star_sections):
+                stars_in_section = star_section.find_all('svg', class_='badge-star')
+            
+            # Try to identify actual badges by looking for meaningful patterns
+            badge_keywords = ['java', 'python', 'sql', 'javascript', 'cpp', 'problem solving', 
+                            'algorithms', 'data structures', '30 days', '10 days', 'ruby', 
+                            'swift', 'golang', 'rust', 'kotlin', 'scala', 'c', 'shell',
+                            'functional programming', 'object oriented programming']
+            
             real_badges = []
-
+            
+            # Strategy: Match badges with their corresponding star sections
+            # The structure seems to be: badge text + associated star-section
             for text in all_texts:
                 text_lower = text.lower()
                 for keyword in badge_keywords:
                     if keyword in text_lower:
+                        
+                        # ✅ Check if badge is in VALID_HACKERRANK_BADGES
                         text_title = text.strip().title()
                         if text_title not in VALID_HACKERRANK_BADGES:
-                            continue
-                        stars = 0
-                        for star_section in star_sections:
-                            if star_section.find('text') and star_section.find('text').get_text().strip().lower() == text_lower:
-                                stars = len(star_section.find_all('svg', class_='badge-star'))
+                            continue  # Skip if not a valid badge name
+                        
+                        # Find the text element in the soup
+                        text_elem = None
+                        for elem in text_elements:
+                            if elem.get_text().strip().lower() == text_lower:
+                                text_elem = elem
                                 break
-                        real_badges.append({'Badge Name': text_title, 'Stars': stars})
-                        break
 
+                        
+                        stars = 0
+                        if text_elem:
+                            # Strategy 1: Look for star-section in the same parent or nearby elements
+                            # Traverse up the DOM tree to find associated star sections
+                            current = text_elem
+                            found_stars = False
+                            
+                            # Check multiple levels up the DOM tree
+                            for level in range(5):  # Check up to 5 levels up
+                                if current is None:
+                                    break
+                                    
+                                # Look for star-section in current element
+                                star_section = current.find('g', class_='star-section')
+                                if star_section:
+                                    badge_star_elements = star_section.find_all('svg', class_='badge-star')
+                                    stars = len(badge_star_elements)
+                                    found_stars = True
+                                    break
+                                
+                                # Look for star-section in siblings
+                                if current.parent:
+                                    sibling_star_sections = current.parent.find_all('g', class_='star-section')
+                                    if sibling_star_sections:
+                                        # Take the first star section found (assuming it's related)
+                                        badge_star_elements = sibling_star_sections[0].find_all('svg', class_='badge-star')
+                                        stars = len(badge_star_elements)
+                                        found_stars = True
+                                        break
+                                
+                                current = current.parent
+                            
+                            # Strategy 2: If no direct association found, try positional matching
+                            if not found_stars and star_sections:
+                                
+                                # Get text position
+                                text_x = text_elem.get('x', '0')
+                                text_y = text_elem.get('y', '0')
+                                
+                                try:
+                                    text_x_num = float(text_x) if str(text_x).replace('.', '').replace('-', '').isdigit() else 0
+                                    text_y_num = float(text_y) if str(text_y).replace('.', '').replace('-', '').isdigit() else 0
+                                    
+                                    closest_star_section = None
+                                    min_distance = float('inf')
+                                    
+                                    for star_section in star_sections:
+                                        # Get star section position from transform attribute
+                                        transform = star_section.get('transform', '')
+                                        if 'translate' in transform:
+                                            # Extract translate values
+                                            import re
+                                            translate_match = re.search(r'translate\(([^,]+),\s*([^)]+)\)', transform)
+                                            if translate_match:
+                                                try:
+                                                    star_x = float(translate_match.group(1))
+                                                    star_y = float(translate_match.group(2))
+                                                    
+                                                    distance = ((star_x - text_x_num) ** 2 + (star_y - text_y_num) ** 2) ** 0.5
+                                                    if distance < min_distance:
+                                                        min_distance = distance
+                                                        closest_star_section = star_section
+                                                except:
+                                                    continue
+                                    
+                                    if closest_star_section:
+                                        badge_star_elements = closest_star_section.find_all('svg', class_='badge-star')
+                                        stars = len(badge_star_elements)
+                                        found_stars = True
+                                        
+                                except:
+                                    pass
+                            
+                            # Strategy 3: Simple distribution if we have star sections
+                            if not found_stars and star_sections:
+                                print("  📊 Using simple distribution strategy...")
+                                # Count total stars and distribute among badges
+                                total_star_elements = soup.find_all('svg', class_='badge-star')
+                                total_badges = len([t for t in all_texts if any(kw in t.lower() for kw in badge_keywords)])
+                                if total_badges > 0:
+                                    stars = len(total_star_elements) // total_badges
+                                    print(f"  ⭐ Estimated {stars} stars ({len(total_star_elements)} total / {total_badges} badges)")
+                        
+                        real_badges.append({
+                            'Badge Name': text.title(),
+                            'Stars': stars
+                        })
+                        
+                        break  # Found this badge, don't check other keywords
+            
+            # Remove duplicates
             seen = set()
-            unique_badges = [b for b in real_badges if not (b['Badge Name'].lower() in seen or seen.add(b['Badge Name'].lower()))]
+            unique_badges = []
+            for badge in real_badges:
+                badge_key = badge['Badge Name'].lower()
+                if badge_key not in seen:
+                    seen.add(badge_key)
+                    unique_badges.append(badge)
+            
+            
+            
             return unique_badges if unique_badges else None
+            
         else:
+            print(f"HTTP Error: {response.status_code}")
             return None
+            
     except Exception as e:
-        print("Error in fetch_hackerrank_badges_svg:", e)
+        print(f"Exception occurred: {str(e)}")
         return None
+
 
 
 
