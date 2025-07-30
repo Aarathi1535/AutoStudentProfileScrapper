@@ -7,9 +7,14 @@ import json
 
 app = Flask(__name__)
 
+# Load dataset
 data_df = pd.read_csv('III_DS-Student_Profiles.csv')
 data_df.columns = data_df.columns.str.strip()
 
+
+# ----------------------
+# HackerRank Badges Logic
+# ----------------------
 def fetch_hackerrank_badges_svg(username):
     VALID_HACKERRANK_BADGES = {
         'Problem Solving', 'Java', 'Python', 'C Language', 'Cpp', 'C#', 'JavaScript',
@@ -26,13 +31,12 @@ def fetch_hackerrank_badges_svg(username):
         response = requests.get(badge_url, timeout=15)
 
         if response.status_code == 200:
-            svg_xml = response.text
-            soup = BeautifulSoup(svg_xml, 'xml')
+            soup = BeautifulSoup(response.text, 'xml')
             text_elements = soup.find_all('text')
             star_sections = soup.find_all('g', class_='star-section')
 
-            badge_keywords = ['java', 'python', 'sql', 'javascript', 'cpp', 'problem solving', 
-                              'algorithms', 'data structures', '30 days', '10 days', 'ruby', 
+            badge_keywords = ['java', 'python', 'sql', 'javascript', 'cpp', 'problem solving',
+                              'algorithms', 'data structures', '30 days', '10 days', 'ruby',
                               'swift', 'golang', 'rust', 'kotlin', 'scala', 'c', 'shell',
                               'functional programming', 'object oriented programming']
 
@@ -46,13 +50,11 @@ def fetch_hackerrank_badges_svg(username):
                         text_title = text.strip().title()
                         if text_title not in VALID_HACKERRANK_BADGES:
                             continue
-
                         stars = 0
                         for star_section in star_sections:
                             if star_section.find('text') and star_section.find('text').get_text().strip().lower() == text_lower:
                                 stars = len(star_section.find_all('svg', class_='badge-star'))
                                 break
-
                         real_badges.append({'Badge Name': text_title, 'Stars': stars})
                         break
 
@@ -64,19 +66,65 @@ def fetch_hackerrank_badges_svg(username):
     except:
         return None
 
+
+# ----------------------
+# LeetCode Stats Logic
+# ----------------------
+def fetch_leetcode_data(username):
+    url = f"https://leetcode-stats-api.herokuapp.com/{username}"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+    except:
+        return None
+
+
+# ----------------------
+# Routes
+# ----------------------
 @app.route('/')
 def home():
     return render_template('index.html')
 
+
 @app.route('/student', methods=['POST'])
 def student():
-    roll = request.form.get('roll').strip().upper()
+    roll = request.form.get('roll')
+    if not roll:
+        return "Roll number is required.", 400
+
+    roll = roll.strip().upper()
     student = data_df[data_df['Roll Number'].str.upper() == roll]
+
     if not student.empty:
         data = student.iloc[0].to_dict()
+
+        # ---------- LeetCode ----------
+        leetcode_url = data.get('Leet code links')
+        leetcode_stats = None
+        if isinstance(leetcode_url, str) and 'leetcode.com' in leetcode_url:
+            username = leetcode_url.rstrip('/').split('/')[-1]
+            leetcode_stats = fetch_leetcode_data(username)
+            data['leetcode_stats'] = leetcode_stats
+
+        # ---------- HackerRank ----------
+        hackerrank_url = data.get('Hackerrank profile link')
+        hackerrank_badges = None
+        if isinstance(hackerrank_url, str) and 'hackerrank.com' in hackerrank_url:
+            username = hackerrank_url.rstrip('/').split('/')[-1]
+            data['hackerrank_username'] = username
+            hackerrank_badges = fetch_hackerrank_badges_svg(username)
+            data['hackerrank_badges'] = hackerrank_badges
+
         return render_template('student.html', data=data)
+
     return "Student not found."
 
+
+# Optional route if you're using JSON fetch externally
 @app.route('/hackerrank_badges', methods=['POST'])
 def hackerrank_badges():
     profile_url = request.form.get('hackerrank_url')
@@ -85,6 +133,7 @@ def hackerrank_badges():
         badges = fetch_hackerrank_badges_svg(username)
         return jsonify(badges=badges)
     return jsonify({'error': 'Invalid URL'})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
