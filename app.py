@@ -116,7 +116,7 @@ def student():
     return "Student not found."
 
 # Bulk fetch all student data
-@app.route('/bulk_fetch', methods=['GET'])
+@app.route('/bulk_fetch', methods=['GET','POST'])
 def bulk_fetch():
     all_results = []
     for _, row in data_df.iterrows():
