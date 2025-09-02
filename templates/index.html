@@ -8,9 +8,20 @@
 <body>
     <div class="container">
         <h1>🎓 Student Record Lookup</h1>
+        
+        <!-- Single Student Search -->
         <form action="/student" method="post">
             <input type="text" name="roll" placeholder="Enter Roll Number (e.g., 23A31A4401)" required>
             <button type="submit">🔍 Search</button>
+        </form>
+
+        <hr>
+
+        <!-- Bulk Fetch -->
+        <form action="/bulk_fetch" method="post" enctype="multipart/form-data">
+            <label for="file">📂 Upload Dataset (CSV/Excel)</label><br><br>
+            <input type="file" name="file" id="file" accept=".csv,.xlsx" required>
+            <button type="submit">⚡ Bulk Fetch</button>
         </form>
     </div>
 </body>
